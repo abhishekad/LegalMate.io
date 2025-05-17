@@ -22,8 +22,8 @@ export async function processDocumentAction(
       detectKeyClauses({ documentText: fileContent }),
     ]);
 
-    if (!summaryResult.summary) {
-        return { error: 'Failed to generate summary.' };
+    if (!summaryResult.summaryPoints || summaryResult.summaryPoints.length === 0) {
+        return { error: 'Failed to generate summary points.' };
     }
     if (!keyClausesResult.keyClauses) {
         return { error: 'Failed to detect key clauses.' };
@@ -33,7 +33,7 @@ export async function processDocumentAction(
       id: uuidv4(),
       name: fileName,
       originalText: fileContent,
-      summary: summaryResult.summary,
+      summaryPoints: summaryResult.summaryPoints, // Updated to use summaryPoints
       keyClauses: keyClausesResult.keyClauses,
       uploadedAt: new Date().toISOString(),
     };

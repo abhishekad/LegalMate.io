@@ -38,7 +38,7 @@ export const DocumentDisplay: React.FC<DocumentDisplayProps> = ({ document }) =>
         </TabsList>
 
         <TabsContent value="summary" className="mt-4">
-          <SummaryDisplay summary={document.summary} />
+          <SummaryDisplay summaryPoints={document.summaryPoints} />
         </TabsContent>
 
         <TabsContent value="keyClauses" className="mt-4">

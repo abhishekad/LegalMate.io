@@ -8,7 +8,7 @@ export interface ProcessedDocument {
   id: string;
   name: string;
   originalText: string;
-  summary: string;
+  summaryPoints: string[]; // Changed from summary: string
   keyClauses: KeyClause[];
   uploadedAt: string; // ISO string date
 }

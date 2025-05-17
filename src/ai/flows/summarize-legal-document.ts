@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Summarizes a legal document into plain English.
+ * @fileOverview Summarizes a legal document into plain English key points.
  *
  * - summarizeLegalDocument - A function that summarizes a legal document.
  * - SummarizeLegalDocumentInput - The input type for the summarizeLegalDocument function.
@@ -18,7 +18,7 @@ const SummarizeLegalDocumentInputSchema = z.object({
 export type SummarizeLegalDocumentInput = z.infer<typeof SummarizeLegalDocumentInputSchema>;
 
 const SummarizeLegalDocumentOutputSchema = z.object({
-  summary: z.string().describe('A plain English summary of the legal document.'),
+  summaryPoints: z.array(z.string()).describe('A list of key summary points, each as a separate string, in plain English.'),
 });
 
 export type SummarizeLegalDocumentOutput = z.infer<typeof SummarizeLegalDocumentOutputSchema>;
@@ -33,7 +33,7 @@ const summarizeLegalDocumentPrompt = ai.definePrompt({
   output: {schema: SummarizeLegalDocumentOutputSchema},
   prompt: `You are an expert legal professional, skilled at summarizing complex legal documents into plain, easy-to-understand English.
 
-  Please provide a concise summary of the following legal document. Focus on the key points and translate any legal jargon into simple terms. 
+  Please provide a list of key summary points for the following legal document. Each point should be a concise sentence. Focus on the most important aspects and translate any legal jargon into simple terms.
 
   Document: {{{documentText}}}`,
 });
