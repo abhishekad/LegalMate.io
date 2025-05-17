@@ -1,8 +1,9 @@
+
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-// AppLayout will be used in page.tsx as it needs client state
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -26,16 +27,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/*
+      {/* 
+        Comment moved here:
         The suppressHydrationWarning prop is true.
         This can be useful if server-rendered and client-rendered markup might differ
         for reasons like timestamps or when integrating with browser extensions or
         libraries (like next-themes for theme switching) that might modify the DOM.
       */}
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
-        {/* AppLayout is now part of page.tsx to manage client-side state for documents */}
-        {children}
-        <Toaster />
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,3 +1,4 @@
+
 "use client";
 
 import type React from 'react';
@@ -7,51 +8,63 @@ import { DocumentUploadForm } from '@/components/DocumentUploadForm';
 import { DocumentDisplay } from '@/components/DocumentDisplay';
 import type { ProcessedDocument } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileSearch, Info } from 'lucide-react';
+import { FileSearch, Info, Loader2 as IconLoader } from 'lucide-react'; // Renamed Loader2 to IconLoader to avoid conflict
 import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import { Header } from '@/components/Header'; // Import Header for standalone display when not logged in
 
 export default function HomePage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [processedDocuments, setProcessedDocuments] = useState<ProcessedDocument[]>([]);
   const [currentDocument, setCurrentDocument] = useState<ProcessedDocument | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // Global loading for AI processing
-  const [isInitialLoad, setIsInitialLoad] = useState(true); // To manage initial localStorage load
+  const [isLoadingAIData, setIsLoadingAIData] = useState(false); // Global loading for AI processing
+  const [isInitialDocLoad, setIsInitialDocLoad] = useState(true); // To manage initial localStorage load
 
-  // Load documents from localStorage on initial mount
+  // Effect for redirecting if not authenticated
   useEffect(() => {
-    try {
-      const storedDocs = localStorage.getItem('legalMateDocs');
-      if (storedDocs) {
-        const parsedDocs: ProcessedDocument[] = JSON.parse(storedDocs);
-        setProcessedDocuments(parsedDocs);
-        // Optionally, select the most recent document or the first one
-        if (parsedDocs.length > 0) {
-           // Sort by date to get the most recent one first if desired
-           // parsedDocs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
-           // setCurrentDocument(parsedDocs[0]);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load documents from localStorage:", error);
-      // Handle potential JSON parsing errors or other issues
+    if (!authLoading && !user) {
+      router.push('/login');
     }
-    setIsInitialLoad(false);
-  }, []);
+  }, [user, authLoading, router]);
 
-  // Save documents to localStorage whenever processedDocuments changes
+  // Load documents from localStorage on initial mount (if user is logged in)
   useEffect(() => {
-    if (!isInitialLoad) { // Avoid writing back initial empty/default state before loading
+    if (user && !authLoading) { // Only load if user is logged in and auth state is resolved
+      try {
+        const storedDocs = localStorage.getItem(`legalMateDocs_${user.uid}`); // User-specific storage
+        if (storedDocs) {
+          const parsedDocs: ProcessedDocument[] = JSON.parse(storedDocs);
+          setProcessedDocuments(parsedDocs);
+        }
+      } catch (error) {
+        console.error("Failed to load documents from localStorage:", error);
+      }
+      setIsInitialDocLoad(false);
+    } else if (!user && !authLoading) {
+      // If no user, clear any potentially loaded docs for a previous user / ensure clean state
+      setProcessedDocuments([]);
+      setCurrentDocument(null);
+      setIsInitialDocLoad(false); // Mark doc loading as complete even if no user
+    }
+  }, [user, authLoading]);
+
+  // Save documents to localStorage whenever processedDocuments changes (if user is logged in)
+  useEffect(() => {
+    if (user && !isInitialDocLoad) { 
         try {
-            localStorage.setItem('legalMateDocs', JSON.stringify(processedDocuments));
+            localStorage.setItem(`legalMateDocs_${user.uid}`, JSON.stringify(processedDocuments));
         } catch (error) {
             console.error("Failed to save documents to localStorage:", error);
-            // Handle potential storage full errors or other issues
         }
     }
-  }, [processedDocuments, isInitialLoad]);
+  }, [processedDocuments, isInitialDocLoad, user]);
 
 
   const handleDocumentProcessed = (newDocument: ProcessedDocument) => {
-    setProcessedDocuments(prevDocs => [newDocument, ...prevDocs]); // Add to the beginning of the list
+    setProcessedDocuments(prevDocs => [newDocument, ...prevDocs]);
     setCurrentDocument(newDocument);
   };
 
@@ -62,28 +75,55 @@ export default function HomePage() {
     }
   };
 
+  // Auth loading state
+  if (authLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header /> {/* Show header even during auth load for consistency */}
+        <div className="flex flex-1 items-center justify-center">
+          <IconLoader className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground sr-only">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user, and auth is not loading, this part should ideally not be reached due to redirect.
+  // However, as a fallback or if redirect hasn't completed:
+  if (!user) {
+     return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-muted-foreground">Please <a href="/login" className="text-primary hover:underline">login</a> to continue.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // User is authenticated, proceed to render app content
   const renderContent = () => {
-    if (isInitialLoad) { // Display loader while localStorage is being checked (runs on server & client first render)
+    if (isInitialDocLoad) { 
       return (
         <div className="flex flex-col items-center justify-center h-full text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <IconLoader className="h-12 w-12 animate-spin text-primary" />
           <p className="mt-4 text-muted-foreground">Loading your documents...</p>
         </div>
       );
     }
 
-    if (isLoading) {
+    if (isLoadingAIData) {
       return (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <Skeleton className="h-10 w-3/5" />
             <Skeleton className="h-4 w-1/5" />
           </div>
-          <Skeleton className="h-12 w-full" /> {/* Tabs skeleton */}
+          <Skeleton className="h-12 w-full" /> 
           <Card>
             <CardContent className="p-6 space-y-4">
-              <Skeleton className="h-6 w-1/4 mb-2" /> {/* Title skeleton */}
-              <Skeleton className="h-40 w-full" /> {/* Content skeleton */}
+              <Skeleton className="h-6 w-1/4 mb-2" /> 
+              <Skeleton className="h-40 w-full" /> 
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-4 w-full" />
             </CardContent>
@@ -100,7 +140,7 @@ export default function HomePage() {
       <div className="flex flex-col items-center justify-center h-full text-center">
         <DocumentUploadForm
             onDocumentProcessed={handleDocumentProcessed}
-            setIsLoadingGlobal={setIsLoading}
+            setIsLoadingGlobal={setIsLoadingAIData}
         />
         {processedDocuments.length === 0 && (
             <Card className="mt-8 w-full max-w-lg bg-accent/10 border-accent/30">
@@ -147,21 +187,3 @@ export default function HomePage() {
     </AppLayout>
   );
 }
-
-// Helper component for loader
-const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-  </svg>
-);
