@@ -25,7 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning> {/* suppressHydrationWarning for next-themes if used */}
+    <html lang="en" suppressHydrationWarning>
+      {/*
+        The suppressHydrationWarning prop is true.
+        This can be useful if server-rendered and client-rendered markup might differ
+        for reasons like timestamps or when integrating with browser extensions or
+        libraries (like next-themes for theme switching) that might modify the DOM.
+      */}
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
         {/* AppLayout is now part of page.tsx to manage client-side state for documents */}
         {children}
