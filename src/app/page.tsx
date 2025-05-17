@@ -27,7 +27,7 @@ export default function HomePage() {
         if (parsedDocs.length > 0) {
            // Sort by date to get the most recent one first if desired
            // parsedDocs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
-           // setCurrentDocument(parsedDocs[0]); 
+           // setCurrentDocument(parsedDocs[0]);
         }
       }
     } catch (error) {
@@ -63,6 +63,15 @@ export default function HomePage() {
   };
 
   const renderContent = () => {
+    if (isInitialLoad) { // Display loader while localStorage is being checked (runs on server & client first render)
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Loading your documents...</p>
+        </div>
+      );
+    }
+
     if (isLoading) {
       return (
         <div className="space-y-6">
@@ -89,8 +98,8 @@ export default function HomePage() {
 
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
-        <DocumentUploadForm 
-            onDocumentProcessed={handleDocumentProcessed} 
+        <DocumentUploadForm
+            onDocumentProcessed={handleDocumentProcessed}
             setIsLoadingGlobal={setIsLoading}
         />
         {processedDocuments.length === 0 && (
@@ -127,15 +136,6 @@ export default function HomePage() {
       </div>
     );
   };
-  
-  if (isInitialLoad && typeof window !== 'undefined') { // Prevent server-side rendering of loading state if it depends on localStorage
-    return ( // Or a more generic page loading spinner
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
 
   return (
     <AppLayout
