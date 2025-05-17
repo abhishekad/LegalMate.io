@@ -1,3 +1,4 @@
+
 "use client";
 
 import type React from 'react';
@@ -11,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertTriangle, Info } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { StyledLegalText } from './StyledLegalText'; // Import the new component
 
 interface KeyClausesListProps {
   keyClauses: KeyClause[];
@@ -56,11 +58,15 @@ export const KeyClausesList: React.FC<KeyClausesListProps> = ({ keyClauses }) =>
                       <Info className="h-4 w-4 text-primary" />
                       Clause Text:
                     </h4>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{clause.clauseText}</p>
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                      <StyledLegalText text={clause.clauseText} />
+                    </div>
                   </div>
                   <div className="p-3 bg-secondary/30 rounded-md">
                     <h4 className="font-semibold text-sm mb-1">Justification:</h4>
-                    <p className="text-sm leading-relaxed italic text-muted-foreground">{clause.justification}</p>
+                    <div className="text-sm leading-relaxed italic text-muted-foreground">
+                       <StyledLegalText text={clause.justification} />
+                    </div>
                   </div>
                 </AccordionContent>
               </AccordionItem>
