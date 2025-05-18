@@ -10,11 +10,13 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   signInWithPhoneNumber,
+  GoogleAuthProvider, // Added
+  signInWithPopup,    // Added
   type User, 
   type Auth,
   type ConfirmationResult
 } from 'firebase/auth';
-import { app, auth as firebaseAuth, initializeRecaptchaVerifier } from '@/lib/firebase'; // Use the auth instance from firebase.ts
+import { app, auth as firebaseAuth, initializeRecaptchaVerifier } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,6 +28,7 @@ interface AuthContextType {
   signInWithEmail: (email: string, pass: string) => Promise<User | null>;
   signInWithPhone: (phoneNumber: string) => Promise<ConfirmationResult | null>;
   confirmOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<User | null>;
+  signInWithGoogle: () => Promise<User | null>; // Added
   logout: () => Promise<void>;
 }
 
@@ -84,14 +87,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!recaptchaVerifier) {
         throw new Error("RecaptchaVerifier not initialized");
       }
-      // Ensure reCAPTCHA is rendered before signInWithPhoneNumber is called
       await recaptchaVerifier.render(); 
       const confirmationResult = await signInWithPhoneNumber(firebaseAuth, phoneNumber, recaptchaVerifier);
       toast({ title: 'OTP Sent', description: 'An OTP has been sent to your phone.' });
       return confirmationResult;
     } catch (error: any) {
       console.error("Error sending OTP:", error);
-      // Reset reCAPTCHA on error
       if (typeof grecaptcha !== 'undefined' && (window as any).recaptchaWidgetId) {
         grecaptcha.reset((window as any).recaptchaWidgetId);
       }
@@ -118,6 +119,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithGoogle = async (): Promise<User | null> => {
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(firebaseAuth, provider);
+      setUser(result.user);
+      toast({ title: 'Success', description: 'Signed in with Google successfully!' });
+      return result.user;
+    } catch (error: any) {
+      console.error("Error signing in with Google:", error);
+      toast({ title: 'Google Sign-In Error', description: error.message || 'Failed to sign in with Google.', variant: 'destructive' });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     setLoading(true);
     try {
@@ -134,9 +152,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUpWithEmail, signInWithEmail, signInWithPhone, confirmOtp, logout }}>
+    <AuthContext.Provider value={{ user, loading, signUpWithEmail, signInWithEmail, signInWithPhone, confirmOtp, signInWithGoogle, logout }}>
       {children}
-      {/* Invisible reCAPTCHA container for phone auth */}
       <div id="recaptcha-container-invisible"></div>
     </AuthContext.Provider>
   );
