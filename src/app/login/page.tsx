@@ -50,7 +50,7 @@ const emailSchema = z.object({
 });
 
 const phoneSchema = z.object({
-  countryCode: z.string().min(1, { message: "Please select a country code." }),
+  countryCode: z.string().min(1, { message: "Please select a country code." }), // Will store "code_country" e.g., "+1_US"
   subscriberNumber: z.string().regex(/^[0-9]+$/, { message: "Phone number must contain only digits." })
                       .min(5, {message: "Phone number seems too short."})
                       .max(15, {message: "Phone number seems too long."}),
@@ -77,7 +77,10 @@ export default function LoginPage() {
 
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
     resolver: zodResolver(phoneSchema),
-    defaultValues: { countryCode: countryCodes[0].code, subscriberNumber: "" },
+    defaultValues: { 
+      countryCode: countryCodes.length > 0 ? `${countryCodes[0].code}_${countryCodes[0].country}` : "", 
+      subscriberNumber: "" 
+    },
   });
 
   const otpForm = useForm<z.infer<typeof otpSchema>>({
@@ -102,7 +105,9 @@ export default function LoginPage() {
 
   const handleSendOtp = async (values: z.infer<typeof phoneSchema>) => {
     setIsLoading(true);
-    const fullPhoneNumber = `${values.countryCode}${values.subscriberNumber}`;
+    // Extract the actual phone code (e.g., +1) from the combined value (e.g., +1_US)
+    const actualPhoneCode = values.countryCode.substring(0, values.countryCode.lastIndexOf('_'));
+    const fullPhoneNumber = `${actualPhoneCode}${values.subscriberNumber}`;
     const result = await signInWithPhone(fullPhoneNumber);
     if (result) {
       setConfirmationResult(result);
@@ -227,11 +232,14 @@ export default function LoginPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {countryCodes.map((country) => (
-                                  <SelectItem key={`${country.country}-${country.code}-${country.name}`} value={country.code}>
-                                    {country.name}
-                                  </SelectItem>
-                                ))}
+                                {countryCodes.map((country) => {
+                                  const uniqueValue = `${country.code}_${country.country}`;
+                                  return (
+                                    <SelectItem key={uniqueValue} value={uniqueValue}>
+                                      {country.name}
+                                    </SelectItem>
+                                  );
+                                })}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -281,7 +289,7 @@ export default function LoginPage() {
                       {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Verify OTP & Login
                     </Button>
-                    <Button variant="link" onClick={() => {setShowOtpForm(false); setConfirmationResult(null); otpForm.reset(); phoneForm.reset({ countryCode: countryCodes[0].code, subscriberNumber: "" }); setIsLoading(false);}} className="w-full">
+                    <Button variant="link" onClick={() => {setShowOtpForm(false); setConfirmationResult(null); otpForm.reset(); phoneForm.reset({ countryCode: countryCodes.length > 0 ? `${countryCodes[0].code}_${countryCodes[0].country}` : "", subscriberNumber: "" }); setIsLoading(false);}} className="w-full">
                       Change phone number or method
                     </Button>
                   </form>
@@ -303,3 +311,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
