@@ -5,15 +5,40 @@ import { getAuth, RecaptchaVerifier } from 'firebase/auth';
 // import { getStorage } from 'firebase/storage';
 
 // For debugging: Log the API key value that is being accessed
-console.log('[DEBUG] Attempting to use Firebase API Key:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
-console.log('[DEBUG] Attempting to use Firebase Auth Domain:', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
-console.log('[DEBUG] Attempting to use Firebase Project ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+console.log('[DEBUG] Firebase Init: NEXT_PUBLIC_FIREBASE_API_KEY =', process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+console.log('[DEBUG] Firebase Init: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN =', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
+console.log('[DEBUG] Firebase Init: NEXT_PUBLIC_FIREBASE_PROJECT_ID =', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+
+const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+const authDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+if (!apiKey) {
+  throw new Error(
+    "Firebase API Key (NEXT_PUBLIC_FIREBASE_API_KEY) is missing. " +
+    "Please ensure it is set in your .env.local file and the server has been restarted. " +
+    "The value currently received by the application is: " + apiKey
+  );
+}
+if (!authDomain) {
+  // Optional: Add similar checks for other critical config values if needed
+  console.warn(
+    "Firebase Auth Domain (NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) is missing. " +
+    "This might lead to issues. Please check your .env.local file."
+  );
+}
+if (!projectId) {
+  console.warn(
+    "Firebase Project ID (NEXT_PUBLIC_FIREBASE_PROJECT_ID) is missing. " +
+    "This might lead to issues. Please check your .env.local file."
+  );
+}
 
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  apiKey: apiKey,
+  authDomain: authDomain,
+  projectId: projectId,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
@@ -47,13 +72,24 @@ const initializeRecaptchaVerifier = (containerId: string) => {
           // Response expired. Ask user to solve reCAPTCHA again.
           // console.log('reCAPTCHA expired');
           if ((window as any).recaptchaVerifierInstance) {
-            (window as any).recaptchaVerifierInstance.render().then((widgetId: any) => {
-              if (typeof grecaptcha !== 'undefined' && grecaptcha.reset && widgetId) {
-                grecaptcha.reset(widgetId);
-              }
-            }).catch((renderError: any) => {
-                console.error("Error re-rendering recaptcha on expiry:", renderError);
-            });
+             // Attempt to clear the verifier and re-render.
+            try {
+                const verifier = (window as any).recaptchaVerifierInstance as RecaptchaVerifier;
+                verifier.clear(); // Clear the verifier first
+                // Optionally, try to re-render, though often just clearing and re-creating on next attempt is safer.
+                // verifier.render().catch((renderError: any) => {
+                //    console.error("Error re-rendering recaptcha on expiry:", renderError);
+                // });
+                 // Nullify the instance so it gets re-created on next call
+                (window as any).recaptchaVerifierInstance = null;
+                const recaptchaContainer = document.getElementById(containerId);
+                if (recaptchaContainer) {
+                    recaptchaContainer.innerHTML = ''; // Clear out the DOM element
+                }
+
+            } catch (clearError) {
+                console.error("Error clearing or re-rendering recaptcha verifier on expiry:", clearError);
+            }
           }
         },
       });
@@ -65,4 +101,3 @@ const initializeRecaptchaVerifier = (containerId: string) => {
 
 
 export { app, auth, initializeRecaptchaVerifier };
-
