@@ -4,33 +4,29 @@ import { getAuth, RecaptchaVerifier } from 'firebase/auth';
 // import { getFirestore } from 'firebase/firestore';
 // import { getStorage } from 'firebase/storage';
 
-// For debugging: Log the API key value that is being accessed
-console.log('[DEBUG] Firebase Init: NEXT_PUBLIC_FIREBASE_API_KEY =', process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
-console.log('[DEBUG] Firebase Init: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN =', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
-console.log('[DEBUG] Firebase Init: NEXT_PUBLIC_FIREBASE_PROJECT_ID =', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
-
 const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 const authDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
 const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-if (!apiKey) {
+// For debugging: Log the values that are being accessed
+console.log('[DEBUG] Firebase Init: NEXT_PUBLIC_FIREBASE_API_KEY =', apiKey);
+console.log('[DEBUG] Firebase Init: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN =', authDomain);
+console.log('[DEBUG] Firebase Init: NEXT_PUBLIC_FIREBASE_PROJECT_ID =', projectId);
+
+if (!apiKey || !authDomain || !projectId) {
+  const missingVars = [];
+  if (!apiKey) missingVars.push("NEXT_PUBLIC_FIREBASE_API_KEY (current value: " + apiKey + ")");
+  if (!authDomain) missingVars.push("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN (current value: " + authDomain + ")");
+  if (!projectId) missingVars.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID (current value: " + projectId + ")");
+
   throw new Error(
-    "Firebase API Key (NEXT_PUBLIC_FIREBASE_API_KEY) is missing. " +
-    "Please ensure it is set in your .env.local file and the server has been restarted. " +
-    "The value currently received by the application is: " + apiKey
-  );
-}
-if (!authDomain) {
-  // Optional: Add similar checks for other critical config values if needed
-  console.warn(
-    "Firebase Auth Domain (NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) is missing. " +
-    "This might lead to issues. Please check your .env.local file."
-  );
-}
-if (!projectId) {
-  console.warn(
-    "Firebase Project ID (NEXT_PUBLIC_FIREBASE_PROJECT_ID) is missing. " +
-    "This might lead to issues. Please check your .env.local file."
+    `Critical Firebase configuration variables are missing or undefined: [${missingVars.join(', ')}]. \n` +
+    "ACTION REQUIRED: \n" +
+    "1. Check Firebase Studio's UI: Look for a section like 'Environment Variables', 'Secrets', or 'Configuration' in your Firebase Studio project settings. This is the MOST LIKELY place to define these for your Studio's development server. \n" +
+    "2. Define All Required Keys: Ensure NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, NEXT_PUBLIC_FIREBASE_PROJECT_ID, and other NEXT_PUBLIC_FIREBASE_... keys (like STORAGE_BUCKET, MESSAGING_SENDER_ID, APP_ID) are correctly set there with values from your Firebase project (You can find these in Firebase Console > Project settings (gear icon) > General tab > Your apps > Web app > Config). \n" +
+    "3. Restart Studio Server: After setting/updating variables in Firebase Studio, you MUST restart or refresh/redeploy your development server/instance through the Studio's interface for changes to apply. \n" +
+    "4. If Studio uses .env.local: If Firebase Studio is expected to use a .env.local file (check Studio's documentation), ensure it's in your project root, correctly formatted (e.g., NEXT_PUBLIC_FIREBASE_API_KEY=YOUR_KEY), and you've restarted the server. However, Studio's UI for env vars often takes precedence. \n" +
+    "This error originates from the checks in src/lib/firebase.ts."
   );
 }
 
@@ -76,11 +72,7 @@ const initializeRecaptchaVerifier = (containerId: string) => {
             try {
                 const verifier = (window as any).recaptchaVerifierInstance as RecaptchaVerifier;
                 verifier.clear(); // Clear the verifier first
-                // Optionally, try to re-render, though often just clearing and re-creating on next attempt is safer.
-                // verifier.render().catch((renderError: any) => {
-                //    console.error("Error re-rendering recaptcha on expiry:", renderError);
-                // });
-                 // Nullify the instance so it gets re-created on next call
+                // Nullify the instance so it gets re-created on next call
                 (window as any).recaptchaVerifierInstance = null;
                 const recaptchaContainer = document.getElementById(containerId);
                 if (recaptchaContainer) {
