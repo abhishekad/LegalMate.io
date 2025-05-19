@@ -10,11 +10,12 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   signInWithPhoneNumber,
-  GoogleAuthProvider, // Added
-  signInWithPopup,    // Added
+  GoogleAuthProvider,
+  signInWithPopup,
   type User, 
   type Auth,
-  type ConfirmationResult
+  type ConfirmationResult,
+  type RecaptchaVerifier // Added for type safety
 } from 'firebase/auth';
 import { app, auth as firebaseAuth, initializeRecaptchaVerifier } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -28,7 +29,7 @@ interface AuthContextType {
   signInWithEmail: (email: string, pass: string) => Promise<User | null>;
   signInWithPhone: (phoneNumber: string) => Promise<ConfirmationResult | null>;
   confirmOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<User | null>;
-  signInWithGoogle: () => Promise<User | null>; // Added
+  signInWithGoogle: () => Promise<User | null>;
   logout: () => Promise<void>;
 }
 
@@ -85,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const recaptchaVerifier = initializeRecaptchaVerifier('recaptcha-container-invisible');
       if (!recaptchaVerifier) {
-        throw new Error("RecaptchaVerifier not initialized");
+        throw new Error("RecaptchaVerifier not initialized correctly.");
       }
       await recaptchaVerifier.render(); 
       const confirmationResult = await signInWithPhoneNumber(firebaseAuth, phoneNumber, recaptchaVerifier);
@@ -93,10 +94,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return confirmationResult;
     } catch (error: any) {
       console.error("Error sending OTP:", error);
-      if (typeof grecaptcha !== 'undefined' && (window as any).recaptchaWidgetId) {
-        grecaptcha.reset((window as any).recaptchaWidgetId);
+      // Attempt to clear the verifier on error to allow re-attempt
+      const verifier = (window as any).recaptchaVerifierInstance as RecaptchaVerifier | undefined;
+      if (verifier) {
+        try {
+            verifier.clear(); // Clear the verifier
+            (window as any).recaptchaVerifierInstance = null; // Ensure it's re-created next time
+            const recaptchaContainer = document.getElementById('recaptcha-container-invisible');
+            if (recaptchaContainer) { // Clear out the DOM element just in case
+                recaptchaContainer.innerHTML = '';
+            }
+        } catch (clearError) {
+            console.error("Error clearing recaptcha verifier:", clearError);
+        }
       }
-      toast({ title: 'OTP Error', description: error.message || 'Failed to send OTP.', variant: 'destructive' });
+      toast({ title: 'OTP Error', description: error.message || 'Failed to send OTP. Please ensure reCAPTCHA is configured correctly in your Firebase project.', variant: 'destructive' });
       return null;
     } finally {
       setLoading(false);
@@ -166,3 +178,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+

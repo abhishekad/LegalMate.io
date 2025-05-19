@@ -30,8 +30,8 @@ const initializeRecaptchaVerifier = (containerId: string) => {
   if (typeof window !== 'undefined') {
     // Ensure it runs only on the client
     // Check if verifier already exists to avoid re-creation
-    if (!(window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+    if (!(window as any).recaptchaVerifierInstance) {
+      (window as any).recaptchaVerifierInstance = new RecaptchaVerifier(auth, containerId, {
         size: 'invisible',
         callback: (response: any) => {
           // reCAPTCHA solved, allow signInWithPhoneNumber.
@@ -40,21 +40,23 @@ const initializeRecaptchaVerifier = (containerId: string) => {
         'expired-callback': () => {
           // Response expired. Ask user to solve reCAPTCHA again.
           // console.log('reCAPTCHA expired');
-          // You might want to reset the reCAPTCHA here or inform the user.
-          if ((window as any).recaptchaVerifier) {
-            (window as any).recaptchaVerifier.render().then((widgetId: any) => {
-              if (typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+          if ((window as any).recaptchaVerifierInstance) {
+            (window as any).recaptchaVerifierInstance.render().then((widgetId: any) => {
+              if (typeof grecaptcha !== 'undefined' && grecaptcha.reset && widgetId) {
                 grecaptcha.reset(widgetId);
               }
+            }).catch((renderError: any) => {
+                console.error("Error re-rendering recaptcha on expiry:", renderError);
             });
           }
         },
       });
     }
-    return (window as any).recaptchaVerifier;
+    return (window as any).recaptchaVerifierInstance;
   }
   return null;
 };
 
 
 export { app, auth, initializeRecaptchaVerifier };
+
