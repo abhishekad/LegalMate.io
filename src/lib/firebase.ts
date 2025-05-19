@@ -4,6 +4,12 @@ import { getAuth, RecaptchaVerifier } from 'firebase/auth';
 // import { getFirestore } from 'firebase/firestore';
 // import { getStorage } from 'firebase/storage';
 
+// For debugging: Log the API key value that is being accessed
+console.log('[DEBUG] Attempting to use Firebase API Key:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+console.log('[DEBUG] Attempting to use Firebase Auth Domain:', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
+console.log('[DEBUG] Attempting to use Firebase Project ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
