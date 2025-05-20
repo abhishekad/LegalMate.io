@@ -10,7 +10,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Header } from '@/components/Header';
-import { LegalMateLogo } from '@/components/icons/LegalMateLogo'; // This will now render LexaLogo
+import { LegalMateLogo } from '@/components/icons/LegalMateLogo'; 
 import type { ProcessedDocument } from '@/lib/types';
 import { ProcessedDocumentList } from './ProcessedDocumentList';
 
@@ -32,9 +32,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
         <Sidebar side="left" variant="sidebar" collapsible="icon" className="border-r">
           <SidebarHeader className="p-4 border-b flex items-center justify-center">
-            {/* Always show the logo; its internal `collapsed` prop handles appearance */}
-            <LegalMateLogo className="group-data-[collapsible=icon]:hidden" /> {/* Expanded state */}
-            <LegalMateLogo collapsed className="hidden group-data-[collapsible=icon]:!flex" /> {/* Collapsed state */}
+            {/* Expanded state logo */}
+            <LegalMateLogo className="group-data-[collapsible=icon]:hidden" imageSize={40} /> 
+            {/* Collapsed state logo - smaller image */}
+            <LegalMateLogo collapsed className="hidden group-data-[collapsible=icon]:!flex" imageSize={32} /> 
           </SidebarHeader>
           <SidebarContent className="p-0">
             <ProcessedDocumentList 

@@ -1,52 +1,53 @@
+import Image from 'next/image';
 import type React from 'react';
 
-const logoBlue = "#4A72D3"; // Main blue from the provided Lexa logo image
-const taglineColor = "#8898C7"; // Tagline color from the Lexa logo image
-const whiteColor = "#FFFFFF";
+// IMPORTANT: User needs to place their logo at public/images/lexa-logo.png
+// If your logo has a different name or path, update logoPath below.
+const logoPath = '/images/lexa-logo.png'; 
+const logoName = "Lexa"; // App Name
+const logoTagline = "simplify the legalese"; // App Tagline
+const logoTextColor = "hsl(var(--primary))"; // Using themed primary color for text
+const taglineTextColor = "hsl(var(--muted-foreground))"; // Using themed muted color for tagline
 
-export const LegalMateLogo: React.FC<{ className?: string; collapsed?: boolean }> = ({ className, collapsed = false }) => {
-  // This component now renders the "Lexa" logo.
-  // The `collapsed` prop determines if the compact version (icon only) or full version is rendered.
+interface LexaLogoProps {
+  className?: string;
+  collapsed?: boolean;
+  imageSize?: number; // Controls the width and height of the image
+}
+
+export const LegalMateLogo: React.FC<LexaLogoProps> = ({ 
+  className, 
+  collapsed = false,
+  imageSize = 40 // Default size for the image (e.g., height & width)
+}) => {
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
-      <svg 
-        width={collapsed ? "32" : "56"} // Adjusted size for better proportion, icon part is smaller
-        height={collapsed ? "32" : "35"} // Adjusted size
-        viewBox="0 0 70 45" // Adjusted viewBox for the icon part
-        preserveAspectRatio="xMidYMid meet"
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-        aria-label="Lexa visual icon"
-        className={!collapsed ? "mb-0.5" : ""} 
-      >
-        {/* Arc */}
-        <path 
-          d="M5 40 C 5 5, 65 5, 65 40" // Adjusted arc for new viewBox
-          stroke={logoBlue} 
-          strokeWidth="2" 
-          fill="none" 
-        />
-        {/* Person Icon */}
-        <g transform="translate(13 2) scale(0.7)"> {/* Adjusted transform for viewBox */}
-          <circle cx="18" cy="12" r="6" fill={logoBlue} />
-          <path d="M11 19 H25 L22 35 H14 Z" fill={logoBlue} />
-          <path d="M18 22 L16 28 L20 28 Z" fill={whiteColor} />
-        </g>
-        {/* Document Icon */}
-        <g transform="translate(37 9) scale(0.30)"> {/* Adjusted transform for viewBox */}
-          <rect x="1" y="1" width="18" height="22" rx="1.5" fill={whiteColor} stroke={logoBlue} strokeWidth="2.5"/>
-          <path d="M12 1 L19 8 V1 H12 Z" fill={logoBlue} />
-          <text x="3" y="17" fontFamily="Arial, sans-serif" fontSize="8" fontWeight="bold" fill={logoBlue}>DOC</text>
-        </g>
-      </svg>
-      
+      <Image
+        src={logoPath}
+        alt={`${logoName} Logo`}
+        width={imageSize} // Consider this the target width for the image
+        height={imageSize} // Consider this the target height for the image
+        // To maintain aspect ratio and prevent distortion:
+        // - Ensure 'width' and 'height' props match your image's aspect ratio,
+        //   OR use these values as a bounding box and rely on 'object-contain'.
+        // - For best results, provide the actual width and height of your PNG file if known,
+        //   and next/image will optimize it.
+        className="object-contain" // This will ensure the image fits within the width/height box without cropping and maintains its aspect ratio.
+        priority // Good for LCP elements like logos, consider removing if not LCP.
+      />
       {!collapsed && (
         <>
-          <span className="text-2xl font-bold -mt-1" style={{ color: logoBlue, letterSpacing: '-0.02em', lineHeight: '1' }}>
-            Lexa
+          <span 
+            className="mt-1 text-2xl font-bold" 
+            style={{ color: logoTextColor, letterSpacing: '-0.02em', lineHeight: '1' }}
+          >
+            {logoName}
           </span>
-          <span className="text-[10px]" style={{ color: taglineColor }}>
-            simplify the legalese
+          <span 
+            className="text-[10px]" 
+            style={{ color: taglineTextColor }}
+          >
+            {logoTagline}
           </span>
         </>
       )}
