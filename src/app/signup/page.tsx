@@ -51,7 +51,7 @@ const emailSchema = z.object({
 });
 
 const phoneSchema = z.object({
-  countryCode: z.string().min(1, { message: "Please select a country code." }), // Will store "code_country" e.g., "+1_US"
+  countryCode: z.string().min(1, { message: "Please select a country code." }), 
   subscriberNumber: z.string().regex(/^[0-9]+$/, { message: "Phone number must contain only digits." })
                       .min(5, {message: "Phone number seems too short."})
                       .max(15, {message: "Phone number seems too long."}),
@@ -105,10 +105,9 @@ export default function SignUpPage() {
 
   const handleSendOtp = async (values: z.infer<typeof phoneSchema>) => {
     setIsLoading(true);
-    // Extract the actual phone code (e.g., +1) from the combined value (e.g., +1_US)
     const actualPhoneCode = values.countryCode.substring(0, values.countryCode.lastIndexOf('_'));
     const fullPhoneNumber = `${actualPhoneCode}${values.subscriberNumber}`;
-    const result = await signInWithPhone(fullPhoneNumber); // For sign-up, this initiates verification, user is created upon OTP confirmation
+    const result = await signInWithPhone(fullPhoneNumber); 
     if (result) {
       setConfirmationResult(result);
       setShowOtpForm(true);
@@ -119,7 +118,7 @@ export default function SignUpPage() {
   const handleVerifyOtp = async (values: z.infer<typeof otpSchema>) => {
     if (!confirmationResult) return;
     setIsLoading(true);
-    const signedUpUser = await confirmOtp(confirmationResult, values.otp); // This step effectively "signs in" or creates the user if new
+    const signedUpUser = await confirmOtp(confirmationResult, values.otp); 
     if (signedUpUser) {
       router.push('/');
     }
@@ -150,9 +149,9 @@ export default function SignUpPage() {
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
               <UserPlus className="h-8 w-8 text-primary" />
-              Create Account
+              Create Lexa Account
             </CardTitle>
-            <CardDescription>Join LegalMate to simplify your legal documents.</CardDescription>
+            <CardDescription>Join Lexa to simplify your legal documents.</CardDescription>
           </CardHeader>
           
           <CardContent className="space-y-4">
@@ -311,4 +310,3 @@ export default function SignUpPage() {
     </div>
   );
 }
-

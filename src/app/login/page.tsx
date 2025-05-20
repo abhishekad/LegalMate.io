@@ -105,7 +105,6 @@ export default function LoginPage() {
 
   const handleSendOtp = async (values: z.infer<typeof phoneSchema>) => {
     setIsLoading(true);
-    // Extract the actual phone code (e.g., +1) from the combined value (e.g., +1_US)
     const actualPhoneCode = values.countryCode.substring(0, values.countryCode.lastIndexOf('_'));
     const fullPhoneNumber = `${actualPhoneCode}${values.subscriberNumber}`;
     const result = await signInWithPhone(fullPhoneNumber);
@@ -150,7 +149,7 @@ export default function LoginPage() {
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
               <LogIn className="h-8 w-8 text-primary" />
-              Login to LegalMate
+              Login to Lexa
             </CardTitle>
             <CardDescription>Access your legal document analysis.</CardDescription>
           </CardHeader>
@@ -311,4 +310,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

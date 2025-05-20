@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'LegalMate - AI Legal Document Assistant',
-  description: 'Simplify your legal documents with AI-powered summaries and key clause detection.',
+  title: 'Lexa - AI Legal Document Assistant',
+  description: 'Lexa helps simplify your legal documents with AI-powered summaries and key clause detection.',
 };
 
 export default function RootLayout({
@@ -28,7 +28,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       {/* 
-        Comment moved here:
         The suppressHydrationWarning prop is true.
         This can be useful if server-rendered and client-rendered markup might differ
         for reasons like timestamps or when integrating with browser extensions or

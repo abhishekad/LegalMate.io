@@ -8,11 +8,11 @@ import { DocumentUploadForm } from '@/components/DocumentUploadForm';
 import { DocumentDisplay } from '@/components/DocumentDisplay';
 import type { ProcessedDocument } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileSearch, Info, Loader2 as IconLoader } from 'lucide-react'; // Renamed Loader2 to IconLoader to avoid conflict
+import { FileSearch, Info, Loader2 as IconLoader } from 'lucide-react'; 
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Header } from '@/components/Header'; // Import Header for standalone display when not logged in
+import { Header } from '@/components/Header'; 
 
 export default function HomePage() {
   const { user, loading: authLoading } = useAuth();
@@ -20,21 +20,19 @@ export default function HomePage() {
 
   const [processedDocuments, setProcessedDocuments] = useState<ProcessedDocument[]>([]);
   const [currentDocument, setCurrentDocument] = useState<ProcessedDocument | null>(null);
-  const [isLoadingAIData, setIsLoadingAIData] = useState(false); // Global loading for AI processing
-  const [isInitialDocLoad, setIsInitialDocLoad] = useState(true); // To manage initial localStorage load
+  const [isLoadingAIData, setIsLoadingAIData] = useState(false); 
+  const [isInitialDocLoad, setIsInitialDocLoad] = useState(true); 
 
-  // Effect for redirecting if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
-  // Load documents from localStorage on initial mount (if user is logged in)
   useEffect(() => {
-    if (user && !authLoading) { // Only load if user is logged in and auth state is resolved
+    if (user && !authLoading) { 
       try {
-        const storedDocs = localStorage.getItem(`legalMateDocs_${user.uid}`); // User-specific storage
+        const storedDocs = localStorage.getItem(`lexaDocs_${user.uid}`); 
         if (storedDocs) {
           const parsedDocs: ProcessedDocument[] = JSON.parse(storedDocs);
           setProcessedDocuments(parsedDocs);
@@ -44,18 +42,16 @@ export default function HomePage() {
       }
       setIsInitialDocLoad(false);
     } else if (!user && !authLoading) {
-      // If no user, clear any potentially loaded docs for a previous user / ensure clean state
       setProcessedDocuments([]);
       setCurrentDocument(null);
-      setIsInitialDocLoad(false); // Mark doc loading as complete even if no user
+      setIsInitialDocLoad(false); 
     }
   }, [user, authLoading]);
 
-  // Save documents to localStorage whenever processedDocuments changes (if user is logged in)
   useEffect(() => {
     if (user && !isInitialDocLoad) { 
         try {
-            localStorage.setItem(`legalMateDocs_${user.uid}`, JSON.stringify(processedDocuments));
+            localStorage.setItem(`lexaDocs_${user.uid}`, JSON.stringify(processedDocuments));
         } catch (error) {
             console.error("Failed to save documents to localStorage:", error);
         }
@@ -75,11 +71,10 @@ export default function HomePage() {
     }
   };
 
-  // Auth loading state
   if (authLoading) {
     return (
       <div className="flex flex-col min-h-screen">
-        <Header /> {/* Show header even during auth load for consistency */}
+        <Header /> 
         <div className="flex flex-1 items-center justify-center">
           <IconLoader className="h-12 w-12 animate-spin text-primary" />
           <p className="mt-4 text-muted-foreground sr-only">Authenticating...</p>
@@ -88,8 +83,6 @@ export default function HomePage() {
     );
   }
 
-  // If no user, and auth is not loading, this part should ideally not be reached due to redirect.
-  // However, as a fallback or if redirect hasn't completed:
   if (!user) {
      return (
       <div className="flex flex-col min-h-screen">
@@ -101,7 +94,6 @@ export default function HomePage() {
     );
   }
 
-  // User is authenticated, proceed to render app content
   const renderContent = () => {
     if (isInitialDocLoad) { 
       return (
@@ -148,7 +140,7 @@ export default function HomePage() {
                     <div className="flex items-center text-accent">
                         <Info className="h-6 w-6 mr-3 shrink-0" />
                         <div>
-                            <h3 className="font-semibold">Welcome to LegalMate!</h3>
+                            <h3 className="font-semibold">Welcome to Lexa!</h3>
                             <p className="text-sm ">
                                 Upload your first legal document (in .txt format) to get started.
                                 Your processed documents will appear in the sidebar.
